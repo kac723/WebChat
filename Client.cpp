@@ -25,9 +25,6 @@ public:
     {
         cout << "Connecting to server " << address << ":" << port << endl;
         _socket.connect(tcp::endpoint(ip::address::from_string(address), port));
-        //m_socket.connect(Poco::Net::SocketAddress(address, port));
-        //m_socket.setReceiveTimeout(Poco::Timespan(1, 0));
-        //Poco::Net::SocketStream ss(m_socket);
         cout << "Connection successfull!" << endl;
         std::string strData(maxBuffer, 0);
         //ss >> strData;
@@ -48,7 +45,6 @@ public:
             a.set("Message", input);
             std::ostringstream stream;
             a.stringify(stream);
-            //m_socket.sendBytes(stream.str().data(), stream.str().size());
             write(_socket, buffer(stream.str())); //buffer is a method
 
             std::this_thread::sleep_for(std::chrono::seconds(1));

@@ -18,6 +18,7 @@ class Client
 private:
     tcp::socket _socket;
     std::mutex _mutex;
+    std::vector<int> m_users;
     int _clientID = 0;
 
 public:
@@ -46,7 +47,6 @@ public:
             std::ostringstream stream;
             a.stringify(stream);
             write(_socket, buffer(stream.str())); //buffer is a method
-
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }

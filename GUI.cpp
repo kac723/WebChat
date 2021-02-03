@@ -105,6 +105,10 @@ int main()
 #include <Wt/WTable.h>
 #include <Wt/WFileResource.h>
 #include <Wt/WBootstrapTheme.h>
+#include <Wt/WMenuItem.h>
+#include <Wt/WPushButton.h>
+#include "Client.cpp"
+#include <boost/asio.hpp>
 /*
  * A simple hello world application class which demonstrates how to react
  * to events, read input, and give feed-back.
@@ -112,7 +116,7 @@ int main()
 class HelloApplication : public Wt::WApplication
 {
 public:
-    HelloApplication(const Wt::WEnvironment &env);
+    HelloApplication(const Wt::WEnvironment &env, Client *client);
 };
 
 /*
@@ -121,7 +125,8 @@ public:
  * constructor so it is typically also an argument for your custom
  * application constructor.
 */
-HelloApplication::HelloApplication(const Wt::WEnvironment &env)
+
+HelloApplication::HelloApplication(const Wt::WEnvironment &env, Client *client)
     : WApplication(env)
 {
     setTitle("WebChat"); // application title
@@ -134,19 +139,15 @@ HelloApplication::HelloApplication(const Wt::WEnvironment &env)
     auto tabW = container->addNew<Wt::WTabWidget>();
     auto table = std::make_unique<Wt::WTable>();
 
-    table->elementAt(0, 0)->addWidget(std::make_unique<Wt::WText>("Tescik00!"));
-    table->elementAt(0, 1)->addWidget(std::make_unique<Wt::WText>("Tescik01!"));
+    auto button = table->elementAt(0, 0)->addWidget(std::make_unique<Wt::WPushButton>("Add user"));
     table->elementAt(1, 0)->addWidget(std::make_unique<Wt::WText>("Tescik10!"));
-    table->elementAt(1, 1)->addWidget(std::make_unique<Wt::WText>("Tescik11!"));
-    auto contactsTab = tabW->addTab(std::move(table), "Contacts", Wt::ContentLoading::Eager);
+    Wt::WMenuItem *contactsTab = tabW->addTab(std::move(table), "Contacts", Wt::ContentLoading::Eager);
+    auto con = static_cast<Wt::WTable *>(contactsTab->contents());
+    con->elementAt(2, 0)->addWidget(std::make_unique<Wt::WText>("Kacper"));
 
-    tabW->addTab(Wt::cpp14::make_unique<Wt::WTextArea>("The contents of the tabs are pre-loaded in"
-                                                       " the browser to ensure swift switching."),
-                 "Preload", Wt::ContentLoading::Eager);
-    tabW->addTab(Wt::cpp14::make_unique<Wt::WTextArea>("You could change any other style attribute of the"
-                                                       " tab widget by modifying the style class."
-                                                       " The style class 'trhead' is applied to this tab."),
-                 "Style", Wt::ContentLoading::Eager);
+    button->clicked().connect([=] {
+        con->elementAt(con->rowCount() + 1, 0)->addWidget(std::make_unique<Wt::WText>(std::to_string(client->getID())));
+    });
 }
 
 int main(int argc, char **argv)
@@ -162,11 +163,15 @@ int main(int argc, char **argv)
    * support. The function should return a newly instantiated application
    * object.
    */
-    return Wt::WRun(argc, argv, [](const Wt::WEnvironment &env) {
+    boost::asio::io_service io;
+    Client c(io, "127.0.0.1", 4321);
+
+    return Wt::WRun(argc, argv, [&](const Wt::WEnvironment &env) {
         /*
      * You could read information from the environment to decide whether
      * the user has permission to start a new application
      */
-        return std::make_unique<HelloApplication>(env);
+        return std::make_unique<HelloApplication>(env, &c);
+        //./GUI.wt --docroot . --http-listen 0.0.0.0:1234
     });
 }

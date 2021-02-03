@@ -93,7 +93,6 @@ private:
         // newSocket.sendBytes(strClientID.data(), strClientID.size());
         write(m_users[m_users.size() - 1].first,
               buffer(std::to_string(_clientID)));
-        ++_clientID;
         startAccept();
     }
 
@@ -101,7 +100,7 @@ public:
     //constructor for accepting connection from client
     Server(io_context &io)
         : m_io(io), m_acceptor(io, ip::tcp::endpoint(
-                                       ip::tcp::v4(), 4321))
+                                       ip::tcp::v4(), 1234))
     {
         startAccept();
         // m_serverSocket =

@@ -18,6 +18,7 @@ class Client
 private:
     tcp::socket _socket;
     std::mutex _mutex;
+    std::vector<int> m_users;
     int _clientID = 0;
 
 public:
@@ -25,9 +26,6 @@ public:
     {
         cout << "Connecting to server " << address << ":" << port << endl;
         _socket.connect(tcp::endpoint(ip::address::from_string(address), port));
-        //m_socket.connect(Poco::Net::SocketAddress(address, port));
-        //m_socket.setReceiveTimeout(Poco::Timespan(1, 0));
-        //Poco::Net::SocketStream ss(m_socket);
         cout << "Connection successfull!" << endl;
         std::string strData(maxBuffer, 0);
         //ss >> strData;
@@ -44,13 +42,12 @@ public:
             std::getline(cin, input);
             Poco::JSON::Object a;
             a.set("SendingClientID", _clientID);
-            a.set("ReceivingClientID", _clientID == 0 ? 1 : _clientID == 2 ? 1 : 0);
+            a.set("ReceivingClientID", _clientID == 0 ? 1 : _clientID == 2 ? 1
+                                                                           : 0);
             a.set("Message", input);
             std::ostringstream stream;
             a.stringify(stream);
-            //m_socket.sendBytes(stream.str().data(), stream.str().size());
             write(_socket, buffer(stream.str())); //buffer is a method
-
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
@@ -59,24 +56,32 @@ public:
     {
         while (_socket.is_open())
         {
-            std::string received(maxBuffer, 0);
-            _socket.read_some(buffer(received));
-            cout << "Received: " << received << endl;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (_socket.available() > 0)
+            {
+                std::string received(maxBuffer, 0);
+                _socket.read_some(buffer(received));
+                cout << "Received: " << received << endl;
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
         }
+    }
+
+    int getID() const
+    {
+        return _clientID;
     }
 };
 
-int main()
+/*int main()
 {
     io_service io;
     //tcp::socket socket(io);
-    Client c(io, "127.0.0.1", 1234);
-    std::thread tSend(&Client::startSend, &c);
+    Client c(io, "127.0.0.1", 4321);
+    //std::thread tSend(&Client::startSend, &c);
     std::thread tRecv(&Client::startReceive, &c);
     while (1)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;
-}
+}*/
